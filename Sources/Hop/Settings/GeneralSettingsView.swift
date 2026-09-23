@@ -5,8 +5,26 @@ struct GeneralSettingsView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     let onImportVelja: () -> Void
 
+    @State private var isDefaultBrowser = DefaultBrowser.isCurrent()
+
     var body: some View {
         Form {
+            Section("Default Browser") {
+                if isDefaultBrowser {
+                    Label("Hop is your default browser", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.secondary)
+                } else {
+                    Button("Set Hop as Default Browser") {
+                        DefaultBrowser.setAsDefault { isDefault in
+                            isDefaultBrowser = isDefault
+                        }
+                    }
+                    Text("Routes every link you click through Hop's rules and picker.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             Section("Startup") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { newValue in
@@ -38,5 +56,6 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { isDefaultBrowser = DefaultBrowser.isCurrent() }
     }
 }
