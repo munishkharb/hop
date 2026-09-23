@@ -18,5 +18,14 @@ swift build -c release
 ```
 Built with Swift and SwiftUI (SwiftPM executable target; needs Xcode 15+ for the SwiftUI macros).
 
+## Development
+Run `pre-commit install` once per clone. On every commit this then runs, against staged files:
+
+- **betterleaks**: secrets scan (redacted output), blocks the commit on a hit. This is the main gate for this repo.
+- **opengrep**: SAST against a small pinned rule pack vendored at `.opengrep/rules` (Swift-specific rules plus generic secret patterns, no registry fetch at commit time). Opengrep's Swift coverage is thin, so treat it as a secondary check behind betterleaks.
+- the standard pre-commit-hooks set: end-of-file-fixer, trailing-whitespace, check-merge-conflict, detect-private-key.
+
+Both scanners run as already-installed binaries (`brew install betterleaks`; opengrep via its install script) rather than something pre-commit builds for you. Run everything on demand with `pre-commit run --all-files`. `main` is protected, so this file lands through a pull request rather than a direct push.
+
 ## License
 MIT — see LICENSE.
