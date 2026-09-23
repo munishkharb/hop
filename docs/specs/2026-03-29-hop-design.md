@@ -116,7 +116,7 @@ Hop is a native, lightweight macOS browser picker. When you click a link anywher
 
 - On first launch, detect if Velja rules exist in UserDefaults
 - Offer to import: parse Velja's rule JSON format and convert to Hop rules
-- Existing Velja rules to migrate:
+- Example Velja rules:
   - `example.com` -> Chrome Beta
   - `example.org` -> Chrome Beta
   - `example.net` -> Chrome Beta

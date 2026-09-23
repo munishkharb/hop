@@ -40,6 +40,15 @@ final class RuleEngineTests: XCTestCase {
         XCTAssertNil(result)
     }
 
+    func testPathWithoutWildcardDoesNotPrefixMatch() {
+        let rules = [Rule(pattern: "example.com/admin", browserID: chromeBeta)]
+        let engine = RuleEngine(rules: rules)
+        XCTAssertEqual(engine.evaluate(url: URL(string: "https://example.com/admin")!), chromeBeta)
+        XCTAssertEqual(engine.evaluate(url: URL(string: "https://example.com/admin/users")!), chromeBeta)
+        XCTAssertNil(engine.evaluate(url: URL(string: "https://example.com/administration")!))
+        XCTAssertNil(engine.evaluate(url: URL(string: "https://example.com/admin-panel-public")!))
+    }
+
     func testFirstMatchWins() {
         let rules = [
             Rule(pattern: "slack.com", browserID: "com.brave.Browser.beta"),

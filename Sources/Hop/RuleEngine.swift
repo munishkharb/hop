@@ -33,8 +33,15 @@ final class RuleEngine {
     }
 
     private func pathGlobMatch(path: String, pattern: String) -> Bool {
+        let hasWildcard = pattern.hasSuffix("*")
         let escaped = NSRegularExpression.escapedPattern(for: pattern)
-        let regexPattern = "^" + escaped.replacingOccurrences(of: "\\*", with: ".*") + ".*$"
+            .replacingOccurrences(of: "\\*", with: ".*")
+        // Only a pattern that explicitly ends in "*" gets open-ended matching;
+        // otherwise require an exact match or a "/"-bounded continuation
+        // (so "/admin" matches "/admin" and "/admin/settings" but not "/administration").
+        let regexPattern = hasWildcard
+            ? "^" + escaped + "$"
+            : "^" + escaped + "(/.*)?$"
         guard let regex = try? NSRegularExpression(pattern: regexPattern) else { return false }
         let range = NSRange(path.startIndex..., in: path)
         return regex.firstMatch(in: path, range: range) != nil
