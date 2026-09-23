@@ -1,5 +1,7 @@
 # hop
 
+[![CI](https://github.com/munishkharb/hop/actions/workflows/ci.yml/badge.svg)](https://github.com/munishkharb/hop/actions/workflows/ci.yml)
+
 A macOS browser picker. hop catches every link you open and either sends it straight to the right browser by your rules, or shows a fast picker so you choose in one keystroke.
 
 - **Rules** — match a link by domain, path, or the app it came from, and route it to a specific browser, or fall through to the picker.
