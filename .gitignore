@@ -3,3 +3,5 @@
 *.xcodeproj/
 DerivedData/
 Hop.app/
+.DS_Store
+icon/hop.iconset/
