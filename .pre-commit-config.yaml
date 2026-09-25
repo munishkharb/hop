@@ -6,11 +6,11 @@
 #   - betterleaks (brew install betterleaks)
 #   - opengrep    (see https://github.com/opengrep/opengrep/blob/main/install.sh)
 #
-# Opengrep coverage for Swift is thin, so it runs a small vendored pack:
-# the project's own Swift rules plus opengrep's generic secrets patterns
-# (from opengrep/opengrep-rules @ f1d2b562b414783763fd02a6ed2736eaed622efa,
-# under .opengrep/rules), as a second layer behind betterleaks, which is the
-# main gate here.
+# Opengrep coverage for Swift is thin, so it runs a small vendored pack of
+# four Swift rules (from opengrep/opengrep-rules @
+# f1d2b562b414783763fd02a6ed2736eaed622efa, under .opengrep/rules), as a
+# second layer behind betterleaks, which is the main gate here and the only
+# secrets scanner.
 exclude: '^\.opengrep/'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -31,7 +31,7 @@ repos:
     rev: v1.30.0
     hooks:
       - id: semgrep
-        name: opengrep (SAST, pinned Swift + generic-secrets rules)
+        name: opengrep (SAST, pinned Swift rules)
         types: [swift]
         args:
           - --config
