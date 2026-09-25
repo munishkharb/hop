@@ -82,3 +82,12 @@ final class PickerPanelTests: XCTestCase {
         XCTAssertEqual(dismissed, [first])
     }
 }
+
+final class PickerPanelKeyWindowTests: XCTestCase {
+    // A borderless panel cannot become key by default, and then number keys,
+    // Escape and dismiss-on-focus-loss never reach the picker in the real app.
+    func testPickerPanelCanBecomeKey() {
+        _ = NSApplication.shared
+        XCTAssertTrue(PickerPanel().canBecomeKey)
+    }
+}
