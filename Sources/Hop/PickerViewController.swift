@@ -1,7 +1,15 @@
 import AppKit
 import SwiftUI
 
+/// Whether Option is held while the picker is up. PickerPanel updates it from
+/// flagsChanged events so the rows can show which browsers will open privately.
+final class PickerModifierState: ObservableObject {
+    @Published var optionHeld: Bool
+    init(optionHeld: Bool) { self.optionHeld = optionHeld }
+}
+
 final class PickerViewController: NSHostingController<PickerContentView> {
+    let modifiers: PickerModifierState
     private let onSelectHandler: (Browser, Bool) -> Void
     private let onCancelHandler: () -> Void
     private let browserList: [Browser]
@@ -15,9 +23,12 @@ final class PickerViewController: NSHostingController<PickerContentView> {
         self.onSelectHandler = onSelect
         self.onCancelHandler = onCancel
         self.browserList = browsers
+        let modifiers = PickerModifierState(optionHeld: NSEvent.modifierFlags.contains(.option))
+        self.modifiers = modifiers
         let view = PickerContentView(
             url: url,
             browsers: browsers,
+            modifiers: modifiers,
             onSelect: onSelect,
             onCancel: onCancel
         )
@@ -59,6 +70,7 @@ final class PickerViewController: NSHostingController<PickerContentView> {
 struct PickerContentView: View {
     let url: URL
     let browsers: [Browser]
+    @ObservedObject var modifiers: PickerModifierState
     let onSelect: (Browser, Bool) -> Void
     let onCancel: () -> Void
 
@@ -82,6 +94,7 @@ struct PickerContentView: View {
                     browser: browser,
                     index: index + 1,
                     isHovered: hoveredIndex == index,
+                    optionHeld: modifiers.optionHeld,
                     onSelect: onSelect
                 )
                 .onHover { isHovered in
@@ -91,7 +104,7 @@ struct PickerContentView: View {
 
             Divider().padding(.horizontal, 8)
 
-            Text("⌥ Option + click for private window  ·  Esc to cancel")
+            Text("1–9 or click to open  ·  ⌥ for private  ·  Esc to cancel")
                 .font(.system(size: 10))
                 .foregroundColor(.secondary.opacity(0.6))
                 .padding(.horizontal, 12)
@@ -107,6 +120,7 @@ struct BrowserRowView: View {
     let browser: Browser
     let index: Int
     let isHovered: Bool
+    let optionHeld: Bool
     let onSelect: (Browser, Bool) -> Void
 
     var body: some View {
@@ -136,15 +150,28 @@ struct BrowserRowView: View {
                 Spacer()
 
                 if browser.privateFlag != nil {
-                    Image(systemName: "eye.slash")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary.opacity(0.6))
+                    if optionHeld {
+                        Text("Private")
+                            .font(.system(size: 10, weight: .semibold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.accentColor.opacity(0.2)))
+                            .foregroundColor(.accentColor)
+                    } else {
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary.opacity(0.6))
+                            .help("Hold ⌥ to open privately")
+                    }
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
             .cornerRadius(6)
+            // With Option held, a browser with no private mode would open normally;
+            // dim it so that is visible before the click.
+            .opacity(optionHeld && browser.privateFlag == nil ? 0.4 : 1)
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 4)

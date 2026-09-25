@@ -38,15 +38,17 @@ final class BrowserLauncherTests: XCTestCase {
             path: URL(fileURLWithPath: "/Applications/Google Chrome.app"),
             privateFlag: "--incognito"
         )
-        var captured: [String]?
+        var calls: [[String]] = []
         BrowserLauncher.openPrivate(
             url: URL(string: "https://example.com/?q=1")!,
             in: browser,
-            runOpen: { captured = $0 }
+            runOpen: { calls.append($0) }
         )
-        XCTAssertEqual(captured, [
-            "-n", "-a", "/Applications/Google Chrome.app",
-            "--args", "--incognito", "https://example.com/?q=1",
+        XCTAssertEqual(calls, [
+            ["-n", "-a", "/Applications/Google Chrome.app",
+             "--args", "--incognito", "https://example.com/?q=1"],
+            // then bring the running browser, and its new private window, forward
+            ["-a", "/Applications/Google Chrome.app"],
         ])
     }
 }
