@@ -123,6 +123,10 @@ final class PickerPanel: NSPanel {
     // and it swallows them before PickerViewController.keyDown runs. Handle the
     // picker's shortcuts here, before the view hierarchy sees the event.
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .flagsChanged,
+           let picker = contentViewController as? PickerViewController {
+            picker.modifiers.optionHeld = event.modifierFlags.contains(.option)
+        }
         if event.type == .keyDown,
            let picker = contentViewController as? PickerViewController,
            picker.handleKey(event) {
