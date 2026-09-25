@@ -158,3 +158,27 @@ final class PickerPanelKeyRoutingTests: XCTestCase {
         XCTAssertEqual(picked?.1, true)
     }
 }
+
+final class PickerOptionStateTests: XCTestCase {
+    // Holding Option switches the rows to show which browsers open privately.
+    func testHoldingOptionIsTrackedFromFlagsChanged() {
+        _ = NSApplication.shared
+        let browser = Browser(id: "test.browser", name: "Test",
+                              path: URL(fileURLWithPath: "/nonexistent/Test.app"), privateFlag: nil)
+        let panel = PickerPanel()
+        defer { panel.close() }
+        panel.showPicker(at: .zero, url: URL(string: "https://example.com/")!, browsers: [browser],
+                         onSelect: { _, _ in }, onDismiss: {})
+        let picker = panel.contentViewController as? PickerViewController
+
+        func flags(_ f: NSEvent.ModifierFlags) -> NSEvent {
+            NSEvent.keyEvent(with: .flagsChanged, location: .zero, modifierFlags: f, timestamp: 0,
+                             windowNumber: panel.windowNumber, context: nil, characters: "",
+                             charactersIgnoringModifiers: "", isARepeat: false, keyCode: 58)!
+        }
+        panel.sendEvent(flags([.option]))
+        XCTAssertEqual(picker?.modifiers.optionHeld, true)
+        panel.sendEvent(flags([]))
+        XCTAssertEqual(picker?.modifiers.optionHeld, false)
+    }
+}
