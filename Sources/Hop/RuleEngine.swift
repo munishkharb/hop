@@ -20,8 +20,12 @@ final class RuleEngine {
     }
 
     private func matches(host: String, path: String, pattern: String) -> Bool {
+        // A pattern made only of slashes (or empty) splits to nothing. Such a rule
+        // names no domain, so it can never match; skip it instead of indexing into
+        // an empty array.
         let parts = pattern.split(separator: "/", maxSplits: 1)
-        let domainPattern = String(parts[0])
+        guard let first = parts.first else { return false }
+        let domainPattern = String(first)
         let pathPattern = parts.count > 1 ? "/" + String(parts[1]) : nil
 
         let domainMatches = host == domainPattern || host.hasSuffix("." + domainPattern)
