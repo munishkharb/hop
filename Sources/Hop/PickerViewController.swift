@@ -29,20 +29,30 @@ final class PickerViewController: NSHostingController<PickerContentView> {
     }
 
     override func keyDown(with event: NSEvent) {
-        // Escape key
+        if !handleKey(event) {
+            super.keyDown(with: event)
+        }
+    }
+
+    /// Handle the picker's shortcuts: Escape cancels, 1-9 pick a browser, and
+    /// Option with a number opens it privately. Returns false for any other key.
+    /// PickerPanel calls this from sendEvent, because the SwiftUI hosting view
+    /// consumes key presses before they reach this controller's keyDown.
+    func handleKey(_ event: NSEvent) -> Bool {
         if event.keyCode == 53 {
             onCancelHandler()
-            return
+            return true
         }
 
-        // Number keys 1-9
-        if let chars = event.characters, let digit = Int(chars), digit >= 1, digit <= browserList.count {
+        // Option changes the typed character (Option-1 is "¡"), so read the key
+        // without modifiers.
+        if let chars = event.charactersIgnoringModifiers, let digit = Int(chars), digit >= 1, digit <= browserList.count {
             let isPrivate = event.modifierFlags.contains(.option)
             onSelectHandler(browserList[digit - 1], isPrivate)
-            return
+            return true
         }
 
-        super.keyDown(with: event)
+        return false
     }
 }
 

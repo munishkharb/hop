@@ -102,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "arrow.trianglehead.branch", accessibilityDescription: "Hop")
+            button.image = MenuBarIcon.make()
         }
         updateMenu()
     }
