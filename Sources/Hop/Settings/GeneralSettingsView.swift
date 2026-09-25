@@ -6,6 +6,13 @@ struct GeneralSettingsView: View {
     let onImportVelja: () -> Void
 
     @State private var isDefaultBrowser = DefaultBrowser.isCurrent()
+    // Velja users get an import button; everyone else never sees the section.
+    @State private var hasVeljaRules = false
+
+    static var versionText: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        return version.map { "Hop v\($0)" } ?? "Hop (development build)"
+    }
 
     var body: some View {
         Form {
@@ -36,18 +43,19 @@ struct GeneralSettingsView: View {
                     }
             }
 
-            Section("Migration") {
-                Button("Import Rules from Velja") {
-                    onImportVelja()
+            if hasVeljaRules {
+                Section("Migration") {
+                    Button("Import Rules from Velja") {
+                        onImportVelja()
+                    }
+                    Text("Reads existing Velja rules and adds them to Hop.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-                .disabled(!VeljaMigrator.hasVeljaData())
-                Text("Reads existing Velja rules and adds them to Hop.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
             Section("About") {
-                Text("Hop v1.0.0")
+                Text(Self.versionText)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text("A lightweight browser picker for macOS.")
@@ -56,6 +64,9 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { isDefaultBrowser = DefaultBrowser.isCurrent() }
+        .onAppear {
+            isDefaultBrowser = DefaultBrowser.isCurrent()
+            hasVeljaRules = VeljaMigrator.hasVeljaData()
+        }
     }
 }
