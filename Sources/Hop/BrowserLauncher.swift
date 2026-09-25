@@ -28,6 +28,10 @@ final class BrowserLauncher {
         // and the URL in argv; Chromium- and Firefox-based browsers pass that
         // request on to the running instance, which opens a private window.
         runOpen(["-n", "-a", browser.path.path, "--args"] + browserArgs)
+        // `open -n` activates the short-lived process it started, not the running
+        // browser, so the private window opened behind the current app. A plain
+        // `open -a` brings the browser forward; with windows open it adds none.
+        runOpen(["-a", browser.path.path])
     }
 
     /// Run /usr/bin/open with the given arguments.
