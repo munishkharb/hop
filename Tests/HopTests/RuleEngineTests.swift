@@ -74,4 +74,15 @@ final class RuleEngineTests: XCTestCase {
         let result = engine.evaluate(url: URL(string: "https://anything.com")!)
         XCTAssertNil(result)
     }
+
+    func testPatternWithNoDomainNeverMatchesAndDoesNotCrash() {
+        for pattern in ["", "/", "//", "/admin"] {
+            let engine = RuleEngine(rules: [
+                Rule(pattern: pattern, browserID: "com.apple.Safari"),
+                Rule(pattern: "example.com", browserID: chromeBeta),
+            ])
+            let result = engine.evaluate(url: URL(string: "https://example.com/admin")!)
+            XCTAssertEqual(result, chromeBeta, "pattern \(pattern.debugDescription) should be skipped")
+        }
+    }
 }
