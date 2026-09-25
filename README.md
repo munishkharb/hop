@@ -9,14 +9,21 @@ A macOS browser picker. hop catches every link you open and either sends it stra
 - **History** — see what opened where.
 - **Velja import** — bring your existing rules over.
 
-## Requirements
-macOS 13+. Set hop as your default browser in System Settings, and it takes over link handling.
+## Install
+Needs macOS 13 or later, on Apple silicon or Intel.
+
+1. Download `Hop-<version>.dmg` from the [latest release](https://github.com/munishkharb/hop/releases/latest) and drag Hop into Applications.
+2. hop is not notarized by Apple yet, so the first launch is blocked. Open it once, then go to System Settings → Privacy & Security and click **Open Anyway**. Or clear the download flag yourself: `xattr -dr com.apple.quarantine /Applications/Hop.app`.
+3. Set hop as your default browser (hop's Settings → General has a button for it), and it takes over link handling.
+
+Each release also carries a `.zip` of the app and `SHA256SUMS` for both files.
 
 ## Build
 ```
-swift build -c release
+scripts/package.sh            # dist/Hop.app, Hop-<version>.dmg, Hop-<version>.zip
+swift build -c release        # the bare binary only
 ```
-Built with Swift and SwiftUI (SwiftPM executable target; needs Xcode 15+ for the SwiftUI macros).
+Built with Swift and SwiftUI (SwiftPM executable target; needs Xcode 15+ for the SwiftUI macros). Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests, packages and publishes the release.
 
 ## Development
 Run `pre-commit install` once per clone. On every commit this then runs, against staged files:
