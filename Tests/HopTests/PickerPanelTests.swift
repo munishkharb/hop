@@ -31,8 +31,14 @@ final class PickerPanelTests: XCTestCase {
         (panel.contentViewController as? PickerViewController)?.keyDown(with: event)
     }
 
-    private func drainMainQueue() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+    // The next queued link is shown from an async main-queue block. Run the main
+    // run loop until the expected state appears rather than for a fixed time,
+    // which was too short on a busy CI runner.
+    private func runMainLoop(until condition: () -> Bool, timeout: TimeInterval = 2) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() && Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+        }
     }
 
     func testSecondUnmatchedLinkWaitsForTheFirstChoice() {
@@ -47,12 +53,12 @@ final class PickerPanelTests: XCTestCase {
 
         XCTAssertEqual(shownURL(panel), first)
         press("1", keyCode: 18, in: panel)
-        drainMainQueue()
+        runMainLoop(until: { shownURL(panel) == second })
 
         XCTAssertEqual(shownURL(panel), second)
         XCTAssertTrue(panel.isVisible)
         press("1", keyCode: 18, in: panel)
-        drainMainQueue()
+        runMainLoop(until: { opened.count == 2 })
 
         XCTAssertEqual(opened, [first, second])
     }
@@ -71,12 +77,12 @@ final class PickerPanelTests: XCTestCase {
                          onDismiss: { dismissed.append(self.second) })
 
         press("\u{1b}", keyCode: 53, in: panel)
-        drainMainQueue()
+        runMainLoop(until: { shownURL(panel) == second })
 
         XCTAssertEqual(dismissed, [first])
         XCTAssertEqual(shownURL(panel), second)
         press("1", keyCode: 18, in: panel)
-        drainMainQueue()
+        runMainLoop(until: { !opened.isEmpty })
 
         XCTAssertEqual(opened, [second])
         XCTAssertEqual(dismissed, [first])
