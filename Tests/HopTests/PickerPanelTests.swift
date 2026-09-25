@@ -83,6 +83,42 @@ final class PickerPanelTests: XCTestCase {
     }
 }
 
+final class PickerKeyboardTests: XCTestCase {
+
+    private let browser = Browser(
+        id: "com.google.Chrome",
+        name: "Chrome",
+        path: URL(fileURLWithPath: "/nonexistent/Chrome.app"),
+        privateFlag: "--incognito"
+    )
+
+    override func setUp() {
+        super.setUp()
+        _ = NSApplication.shared
+    }
+
+    // Option changes the typed character (Option-1 is "¡" on a US layout), so the
+    // digit has to come from charactersIgnoringModifiers or Option+number does nothing.
+    func testOptionNumberOpensThatBrowserPrivately() {
+        var picked: (Browser, Bool)?
+        let controller = PickerViewController(
+            url: URL(string: "https://example.com/")!,
+            browsers: [browser],
+            onSelect: { picked = ($0, $1) },
+            onCancel: {}
+        )
+        let event = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [.option], timestamp: 0,
+            windowNumber: 0, context: nil, characters: "¡",
+            charactersIgnoringModifiers: "1", isARepeat: false, keyCode: 18
+        )!
+        controller.keyDown(with: event)
+
+        XCTAssertEqual(picked?.0, browser)
+        XCTAssertEqual(picked?.1, true)
+    }
+}
+
 final class PickerPanelKeyWindowTests: XCTestCase {
     // A borderless panel cannot become key by default, and then number keys,
     // Escape and dismiss-on-focus-loss never reach the picker in the real app.

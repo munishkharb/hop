@@ -35,8 +35,9 @@ final class PickerViewController: NSHostingController<PickerContentView> {
             return
         }
 
-        // Number keys 1-9
-        if let chars = event.characters, let digit = Int(chars), digit >= 1, digit <= browserList.count {
+        // Number keys 1-9. Option changes the typed character (Option-1 is "¡"),
+        // so read the key without modifiers.
+        if let chars = event.charactersIgnoringModifiers, let digit = Int(chars), digit >= 1, digit <= browserList.count {
             let isPrivate = event.modifierFlags.contains(.option)
             onSelectHandler(browserList[digit - 1], isPrivate)
             return
