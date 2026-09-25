@@ -8,9 +8,9 @@
 // Run from inside the icon/ directory; it writes the two PNGs next to itself.
 //
 // The icon tile is a superellipse ("squircle") filled with a vertical linear
-// gradient. Centered on the tile is a custom routing-fork glyph: a vertical
-// stroke that forks into two diverging branches, each ending in a filled
-// triangular arrowhead. Every path below is drawn by hand with CGMutablePath;
+// gradient. Centered on the tile is a custom hop glyph: one bold arc that
+// takes off from a launch dot and lands, arrow first, on the chosen browser
+// (a solid dot between two rings). Every path below is drawn by hand with CGMutablePath;
 // no system symbol font or SF Symbol is used anywhere in this file.
 
 import CoreGraphics
@@ -96,71 +96,65 @@ func squirclePath(center: CGPoint, halfWidth: CGFloat, halfHeight: CGFloat, expo
     return path
 }
 
-// MARK: - Routing-fork glyph (original artwork, not a system symbol)
+// MARK: - Hop glyph (original artwork, not a system symbol)
 
-// Built entirely from custom bezier paths: one trunk stroke, two branch
-// strokes, two filled arrowhead triangles. Coordinates are defined in a
-// local -0.5...0.5 unit box, then scaled/translated onto the tile.
+// A link taking off from a launch point and hopping, along one bold arc, onto
+// the browser it was sent to: a solid dot between two rings (the browsers it
+// did not go to). The arc ends in a filled arrowhead just above its target.
+// Coordinates are defined in a local -0.5...0.5 unit box (y up), then
+// scaled/translated onto the tile. The menu bar icon in
+// Sources/Hop/MenuBarIcon.swift draws the same geometry; keep them in step.
 struct GlyphPaths {
-    let strokePath: CGPath
-    let strokeWidth: CGFloat
-    let arrowheadPath: CGPath
+    let arcPath: CGPath
+    let arcWidth: CGFloat
+    let fillPath: CGPath   // arrowhead, launch dot, chosen-browser dot
+    let ringPath: CGPath   // the two browsers not chosen
+    let ringWidth: CGFloat
 }
 
 func buildGlyph(center: CGPoint, glyphSize: CGFloat) -> GlyphPaths {
-    // Local-space key points (unit box, y up).
-    let stemBottom = Vec(x: 0.0, y: -0.46)
-    let forkPoint = Vec(x: 0.0, y: -0.02)
-    let leftEnd = Vec(x: -0.34, y: 0.44)
-    let rightEnd = Vec(x: 0.34, y: 0.44)
+    let baseline: CGFloat = -0.20
+    let launch = Vec(x: -0.44, y: baseline)
+    let control = Vec(x: -0.08, y: 0.82)
+    let arcEnd = Vec(x: 0.21, y: 0.01)
+    let target = Vec(x: 0.24, y: baseline)
+    let rings = [Vec(x: 0.04, y: baseline), Vec(x: 0.44, y: baseline)]
 
     func toCanvas(_ v: Vec) -> CGPoint {
         CGPoint(x: center.x + v.x * glyphSize, y: center.y + v.y * glyphSize)
     }
-
-    // Trunk + both branches as one continuous stroke path so the fork reads
-    // as a single rounded joint rather than two separate lines glued together.
-    let stroke = CGMutablePath()
-    stroke.move(to: toCanvas(stemBottom))
-    stroke.addLine(to: toCanvas(forkPoint))
-    stroke.addLine(to: toCanvas(leftEnd))
-    stroke.move(to: toCanvas(forkPoint))
-    stroke.addLine(to: toCanvas(rightEnd))
-
-    let strokeWidth = glyphSize * 0.115
-
-    // Arrowheads: filled triangles at each branch end, pointing outward
-    // along that branch's direction.
-    func arrowhead(end: Vec, from: Vec) -> CGPath {
-        let dir = (end - from).normalized
-        let perp = dir.perpendicular
-        // Fractions of the local unit box (not canvas pixels); toCanvas
-        // below applies the glyphSize scale once, at the very end.
-        let length: CGFloat = 0.24
-        let halfWidth: CGFloat = 0.155
-        // Pull the arrowhead back so its base sits well behind the branch
-        // end and flares wider than the stroke, reading as a clear triangle
-        // rather than a rounded line cap.
-        let base = end - dir * (length * 0.55)
-        let apex = base + dir * length
-        let baseLeft = base + perp * halfWidth
-        let baseRight = base - perp * halfWidth
-
-        // These are still local unit-space vectors; project each vertex
-        // through the same center/scale transform used for the stroke.
-        let tri = CGMutablePath()
-        tri.move(to: toCanvas(apex))
-        tri.addLine(to: toCanvas(baseLeft))
-        tri.addLine(to: toCanvas(baseRight))
-        tri.closeSubpath()
-        return tri
+    func circle(_ c: Vec, _ r: CGFloat) -> CGRect {
+        let p = toCanvas(c)
+        let rr = r * glyphSize
+        return CGRect(x: p.x - rr, y: p.y - rr, width: rr * 2, height: rr * 2)
     }
 
-    let arrowheads = CGMutablePath()
-    arrowheads.addPath(arrowhead(end: leftEnd, from: forkPoint))
-    arrowheads.addPath(arrowhead(end: rightEnd, from: forkPoint))
+    let arc = CGMutablePath()
+    arc.move(to: toCanvas(launch))
+    arc.addQuadCurve(to: toCanvas(arcEnd), control: toCanvas(control))
 
-    return GlyphPaths(strokePath: stroke, strokeWidth: strokeWidth, arrowheadPath: arrowheads)
+    // Arrowhead continues the arc's final tangent (control -> end), with its
+    // base flared wider than the stroke so it reads as a triangle.
+    let dir = (arcEnd - control).normalized
+    let perp = dir.perpendicular
+    let size: CGFloat = 0.15
+    let base = arcEnd - dir * (size * 0.3)
+    let fill = CGMutablePath()
+    fill.move(to: toCanvas(arcEnd + dir * size))
+    fill.addLine(to: toCanvas(base + perp * (size * 0.62)))
+    fill.addLine(to: toCanvas(base - perp * (size * 0.62)))
+    fill.closeSubpath()
+    fill.addEllipse(in: circle(launch, 0.075))
+    fill.addEllipse(in: circle(target, 0.075))
+
+    let ringPath = CGMutablePath()
+    for r in rings { ringPath.addEllipse(in: circle(r, 0.055)) }
+
+    return GlyphPaths(
+        arcPath: arc, arcWidth: glyphSize * 0.095,
+        fillPath: fill,
+        ringPath: ringPath, ringWidth: glyphSize * 0.03
+    )
 }
 
 // MARK: - Rendering
@@ -211,20 +205,25 @@ func renderIcon(palette: Palette) -> CGImage? {
 
     context.restoreGState()
 
-    // Glyph: white routing fork, centered, ~57% of the tile diameter.
-    let glyphSize = (half * 2) * 0.57
+    // Glyph: white hop arc, centered, ~62% of the tile diameter.
+    let glyphSize = (half * 2) * 0.62
     let glyph = buildGlyph(center: center, glyphSize: glyphSize)
+    let white = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
 
     context.saveGState()
     context.setLineCap(.round)
     context.setLineJoin(.round)
-    context.setLineWidth(glyph.strokeWidth)
-    context.setStrokeColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
-    context.addPath(glyph.strokePath)
+    context.setStrokeColor(white)
+    context.setLineWidth(glyph.arcWidth)
+    context.addPath(glyph.arcPath)
     context.strokePath()
 
-    context.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
-    context.addPath(glyph.arrowheadPath)
+    context.setLineWidth(glyph.ringWidth)
+    context.addPath(glyph.ringPath)
+    context.strokePath()
+
+    context.setFillColor(white)
+    context.addPath(glyph.fillPath)
     context.fillPath()
     context.restoreGState()
 

@@ -1,0 +1,40 @@
+name: Release
+
+# Push a tag like v1.1.0 to build Hop.app and publish it as a GitHub release
+# with the .dmg, the .zip and their SHA-256 sums attached.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Test
+        run: swift test
+
+      - name: Package
+        run: scripts/package.sh "${GITHUB_REF_NAME}"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "${GITHUB_REF_NAME}" \
+            "dist/Hop-${version}.dmg" \
+            "dist/Hop-${version}.zip" \
+            dist/SHA256SUMS \
+            --title "hop ${version}" \
+            --generate-notes
