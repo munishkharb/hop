@@ -119,6 +119,18 @@ final class PickerPanel: NSPanel {
     // number keys, Escape and resignKey dismissal dead.
     override var canBecomeKey: Bool { true }
 
+    // Key presses go to the first responder, which is the SwiftUI hosting view,
+    // and it swallows them before PickerViewController.keyDown runs. Handle the
+    // picker's shortcuts here, before the view hierarchy sees the event.
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown,
+           let picker = contentViewController as? PickerViewController,
+           picker.handleKey(event) {
+            return
+        }
+        super.sendEvent(event)
+    }
+
     override func resignKey() {
         super.resignKey()
         finishCurrent { $0.onDismiss() }

@@ -133,3 +133,28 @@ final class PickerPanelKeyWindowTests: XCTestCase {
         XCTAssertTrue(PickerPanel().canBecomeKey)
     }
 }
+
+final class PickerPanelKeyRoutingTests: XCTestCase {
+    // Real key presses reach the panel through NSWindow.sendEvent and the
+    // responder chain, not by calling the view controller's keyDown directly.
+    func testOptionNumberSentThroughTheWindowOpensPrivately() {
+        _ = NSApplication.shared
+        let browser = Browser(id: "com.google.Chrome", name: "Chrome",
+                              path: URL(fileURLWithPath: "/nonexistent/Chrome.app"),
+                              privateFlag: "--incognito")
+        let panel = PickerPanel()
+        defer { panel.close() }
+        var picked: (Browser, Bool)?
+        panel.showPicker(at: .zero, url: URL(string: "https://example.com/")!, browsers: [browser],
+                         onSelect: { picked = ($0, $1) }, onDismiss: {})
+        let event = NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: [.option], timestamp: 0,
+            windowNumber: panel.windowNumber, context: nil, characters: "¡",
+            charactersIgnoringModifiers: "1", isARepeat: false, keyCode: 18
+        )!
+        panel.sendEvent(event)
+
+        XCTAssertEqual(picked?.0, browser)
+        XCTAssertEqual(picked?.1, true)
+    }
+}
