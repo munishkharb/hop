@@ -115,6 +115,10 @@ final class PickerPanel: NSPanel {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    // Borderless panels refuse key status by default, which would leave the
+    // number keys, Escape and resignKey dismissal dead.
+    override var canBecomeKey: Bool { true }
+
     override func resignKey() {
         super.resignKey()
         finishCurrent { $0.onDismiss() }
