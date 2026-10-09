@@ -44,5 +44,9 @@ Run `pre-commit install` once per clone. On every commit this then runs, against
 
 Both scanners run as already-installed binaries (`brew install betterleaks`; opengrep via its install script) rather than something pre-commit builds for you. Run everything on demand with `pre-commit run --all-files`. `main` is protected, so this file lands through a pull request rather than a direct push.
 
+## Releases
+
+Developed privately and published here in releases. What changed in each version, and why, is in [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 MIT — see LICENSE.
