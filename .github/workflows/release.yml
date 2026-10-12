@@ -1,7 +1,8 @@
 name: Release
 
 # Push a tag like v1.1.0 to build Hop.app and publish it as a GitHub release
-# with the .dmg, the .zip and their SHA-256 sums attached.
+# with the .dmg, the .zip and their SHA-256 sums attached. The release notes
+# are that version's entry in CHANGELOG.md.
 on:
   push:
     tags: ['v*']
@@ -32,9 +33,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${GITHUB_REF_NAME#v}"
+          awk -v h="## ${GITHUB_REF_NAME}" 'index($0, h " ") == 1 || $0 == h {f=1; next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          grep -q . notes.md || { echo "CHANGELOG.md has no entry for ${GITHUB_REF_NAME}"; exit 1; }
           gh release create "${GITHUB_REF_NAME}" \
             "dist/Hop-${version}.dmg" \
             "dist/Hop-${version}.zip" \
             dist/SHA256SUMS \
             --title "hop ${version}" \
-            --generate-notes
+            --notes-file notes.md

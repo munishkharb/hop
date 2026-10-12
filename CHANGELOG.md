@@ -1,10 +1,8 @@
 # Changelog
 
-hop is developed privately and published here in releases. Each entry says what changed and why.
-
 ## v1.1.2 (2026-10-09)
 
-- CI runs tests and the secret and SAST scans only; commit-message checks stay a local hook.
+- No app changes.
 
 ## v1.1.1 (2026-09-26)
 
@@ -19,4 +17,4 @@ hop is developed privately and published here in releases. Each entry says what 
 - Picker: number keys are handled at the panel before SwiftUI sees them; Option plus a number opens privately; links that match no rule queue instead of replacing the one on screen; the borderless panel takes keyboard focus.
 - Rules: path globs use a linear matcher instead of a regex, and a rule whose pattern names no domain is skipped instead of crashing.
 - The launcher keeps the private-window flag when the browser is already running.
-- Hop.app ships as a .dmg on tagged releases; tests run in CI on every push and pull request; pre-commit runs secret and SAST hooks.
+- Each release ships Hop.app as a .dmg and a .zip, with SHA-256 sums.
