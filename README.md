@@ -1,7 +1,5 @@
 # hop
 
-[![CI](https://github.com/munishkharb/hop/actions/workflows/ci.yml/badge.svg)](https://github.com/munishkharb/hop/actions/workflows/ci.yml)
-
 A macOS browser picker. hop catches every link you open and either sends it straight to the right browser by your rules, or shows a fast picker so you choose in one keystroke.
 
 <p align="center"><img src="docs/images/picker.png" width="320" alt="The hop picker listing five browsers, with number keys and a private-window hint"></p>
@@ -29,24 +27,11 @@ Needs macOS 13 or later, on Apple silicon or Intel.
 Each release also carries a `.zip` of the app and `SHA256SUMS` for both files.
 
 ## Build
+Needs Xcode 15 or later.
 ```
 scripts/package.sh            # dist/Hop.app, Hop-<version>.dmg, Hop-<version>.zip
 swift build -c release        # the bare binary only
 ```
-Built with Swift and SwiftUI (SwiftPM executable target; needs Xcode 15+ for the SwiftUI macros). Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests, packages and publishes the release.
-
-## Development
-Run `pre-commit install` once per clone. On every commit this then runs, against staged files:
-
-- **betterleaks**: secrets scan (redacted output), blocks the commit on a hit. This is the main gate for this repo.
-- **opengrep**: SAST against a small pinned rule pack vendored at `.opengrep/rules` (four Swift-specific rules, no registry fetch at commit time; secrets are covered by betterleaks). Opengrep's Swift coverage is thin, so treat it as a secondary check behind betterleaks.
-- the standard pre-commit-hooks set: end-of-file-fixer, trailing-whitespace, check-merge-conflict, detect-private-key.
-
-Both scanners run as already-installed binaries (`brew install betterleaks`; opengrep via its install script) rather than something pre-commit builds for you. Run everything on demand with `pre-commit run --all-files`. `main` is protected, so this file lands through a pull request rather than a direct push.
-
-## Releases
-
-Developed privately and published here in releases. What changed in each version, and why, is in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
-MIT — see LICENSE.
+MIT. See [LICENSE](LICENSE).

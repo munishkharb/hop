@@ -1,6 +1,6 @@
 import AppKit
 
-/// The menu bar version of the app icon's hop glyph (see icon/render_icon.swift):
+/// The menu bar version of the app icon's hop glyph:
 /// one arc from a launch dot, landing arrow first on the chosen browser. The two
 /// "not chosen" rings are left out because they vanish at menu bar size.
 /// Drawn as a template image so macOS tints it for light and dark menu bars.
